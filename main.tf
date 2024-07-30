@@ -33,6 +33,7 @@ data "aws_iam_policy" "managed" {
 
 data "aws_iam_policy_document" "inline" {
   for_each = var.inline_policies
+  version  = "2012-10-17"
   dynamic "statement" {
     for_each = each.value.statements
     content {
