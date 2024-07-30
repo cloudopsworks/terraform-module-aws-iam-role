@@ -27,7 +27,7 @@ resource "aws_iam_role" "this" {
 }
 
 data "aws_iam_policy" "managed" {
-  for_each = var.policy_attachments
+  for_each = toset(var.policy_attachments)
   arn      = each.value
 }
 
@@ -54,7 +54,7 @@ data "aws_iam_policy_document" "inline" {
 }
 
 resource "aws_iam_role_policy_attachment" "managed" {
-  for_each   = var.policy_attachments
+  for_each   = toset(var.policy_attachments)
   role       = aws_iam_role.this.name
   policy_arn = data.aws_iam_policy.managed[each.key].arn
 }
