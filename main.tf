@@ -42,7 +42,7 @@ data "aws_iam_policy_document" "inline" {
       actions   = statement.value.actions
       resources = statement.value.resources
       dynamic "condition" {
-        for_each = statement.value.conditions
+        for_each = try(statement.value.conditions, [])
         content {
           test     = condition.value.test
           values   = condition.value.values
