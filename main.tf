@@ -54,7 +54,7 @@ data "aws_iam_policy_document" "inline" {
 }
 
 resource "aws_iam_role_policy_attachment" "managed" {
-  for_each   = var.inline_policies
+  for_each   = var.policy_attachments
   role       = aws_iam_role.this.name
   policy_arn = data.aws_iam_policy.managed[each.key].arn
 }
