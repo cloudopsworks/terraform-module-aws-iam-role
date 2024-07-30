@@ -37,7 +37,7 @@ data "aws_iam_policy_document" "inline" {
   dynamic "statement" {
     for_each = each.value.statements
     content {
-      sid       = statement.value.sid
+      sid       = try(statement.value.sid, null)
       effect    = statement.value.effect
       actions   = statement.value.actions
       resources = statement.value.resources
