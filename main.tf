@@ -52,7 +52,7 @@ data "aws_iam_policy_document" "assume_role" {
 resource "aws_iam_role" "this" {
   for_each           = local.roles_map
   name               = "${each.value.name_prefix}-${local.system_name}"
-  assume_role_policy = length(data.aws_iam_policy_document.assume_role) > 0 ? data.aws_iam_policy_document.assume_role[0].json : null
+  assume_role_policy = data.aws_iam_policy_document.assume_role[each.key].json
   description        = each.value.description != "" ? each.value.description : "IAM Role ${each.value.name_prefix}-${local.system_name}"
   tags               = local.all_tags
 }
