@@ -4,10 +4,11 @@
 #            Distributed Under Apache v2.0 License
 #
 
-output "iam_role_name" {
-  value = aws_iam_role.this.name
-}
-
-output "iam_role_arn" {
-  value = aws_iam_role.this.arn
+output "iam_roles" {
+  value = [
+    for role in aws_iam_role.this : {
+      name = role.name
+      arn  = role.arn
+    }
+  ]
 }

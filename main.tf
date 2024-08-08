@@ -4,9 +4,38 @@
 #            Distributed Under Apache v2.0 License
 #
 
+locals {
+  roles_map = { for role in var.roles : role.name_prefix => role }
+  managed_policies = merge(
+    [
+      for role in var.roles : {
+        for policy_arn in try(role.managed_policies, []) : "${role.name_prefix}-${policy_arn}" => {
+          name_prefix = role.name_prefix
+          policy_arn  = policy_arn
+        }
+      }
+  ]...)
+  inline_policies = merge(
+    [
+      for role in var.roles : {
+        for policy in try(role.inline_policies, []) : "${role.name_prefix}-${policy.name}" => {
+          name_prefix = role.name_prefix
+          name        = policy.name
+          statements  = policy.statements
+        }
+      }
+  ]...)
+  assume_role_principals = {
+    for role in var.roles : role.name_prefix => {
+      name_prefix = role.name_prefix
+      principals  = try(role.assume_role_principals, ["ec2.amazonaws.com"])
+    }
+  }
+}
+
 data "aws_iam_policy_document" "assume_role" {
-  count   = length(var.assume_role_principals) > 0 ? 1 : 0
-  version = "2012-10-17"
+  for_each = local.assume_role_principals
+  version  = "2012-10-17"
   statement {
     effect = "Allow"
     actions = [
@@ -14,25 +43,33 @@ data "aws_iam_policy_document" "assume_role" {
     ]
     principals {
       type        = "Service"
-      identifiers = var.assume_role_principals
+      identifiers = each.value.principals
     }
   }
 }
 
 resource "aws_iam_role" "this" {
-  name               = "${var.name_prefix}-${local.system_name}"
+  for_each           = local.roles_map
+  name               = "${each.value.name_prefix}-${local.system_name}"
   assume_role_policy = length(data.aws_iam_policy_document.assume_role) > 0 ? data.aws_iam_policy_document.assume_role[0].json : null
-  description        = var.description != "" ? var.description : "IAM Role ${var.name_prefix}-${local.system_name}"
+  description        = each.value.description != "" ? each.value.description : "IAM Role ${each.value.name_prefix}-${local.system_name}"
   tags               = local.all_tags
 }
 
 data "aws_iam_policy" "managed" {
-  for_each = toset(var.policy_attachments)
-  arn      = each.value
+  for_each = local.managed_policies
+  arn      = each.value.policy_arn
 }
 
+resource "aws_iam_role_policy_attachment" "managed" {
+  for_each   = local.managed_policies
+  role       = aws_iam_role.this[each.value.role_prefix].name
+  policy_arn = data.aws_iam_policy.managed[each.key].arn
+}
+
+# Inline policies
 data "aws_iam_policy_document" "inline" {
-  for_each = var.inline_policies
+  for_each = local.inline_policies
   version  = "2012-10-17"
   dynamic "statement" {
     for_each = each.value.statements
@@ -53,15 +90,9 @@ data "aws_iam_policy_document" "inline" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "managed" {
-  for_each   = toset(var.policy_attachments)
-  role       = aws_iam_role.this.name
-  policy_arn = data.aws_iam_policy.managed[each.key].arn
-}
-
 resource "aws_iam_role_policy" "inline" {
-  for_each = var.inline_policies
-  name     = each.key
-  role     = aws_iam_role.this.id
+  for_each = local.inline_policies
+  name     = each.value.name
+  role     = aws_iam_role.this[each.value.name_prefix].id
   policy   = data.aws_iam_policy_document.inline[each.key].json
 }
