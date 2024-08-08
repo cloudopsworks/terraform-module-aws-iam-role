@@ -28,7 +28,8 @@ locals {
   assume_role_principals = {
     for role in var.roles : role.name_prefix => {
       name_prefix = role.name_prefix
-      principals  = try(role.assume_role_principals, ["ec2.amazonaws.com"])
+      type        = try(role.assume_role.type, "Service")
+      principals  = try(role.assume_role.principals, ["ec2.amazonaws.com"])
     }
   }
 }
@@ -42,7 +43,7 @@ data "aws_iam_policy_document" "assume_role" {
       "sts:AssumeRole"
     ]
     principals {
-      type        = "Service"
+      type        = each.value.type
       identifiers = each.value.principals
     }
   }
