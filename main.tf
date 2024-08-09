@@ -28,20 +28,20 @@ locals {
   assume_role_principals = {
     for role in var.roles : role.name_prefix => {
       name_prefix = role.name_prefix
+      actions     = concat(try(role.assume_role.actions, []), ["sts:AssumeRole"])
       type        = try(role.assume_role.type, "Service")
       principals  = try(role.assume_role.principals, ["ec2.amazonaws.com"])
     }
   }
 }
 
+# STS Assume
 data "aws_iam_policy_document" "assume_role" {
   for_each = local.assume_role_principals
   version  = "2012-10-17"
   statement {
-    effect = "Allow"
-    actions = [
-      "sts:AssumeRole"
-    ]
+    effect  = "Allow"
+    actions = each.value.actions
     principals {
       type        = each.value.type
       identifiers = each.value.principals
@@ -49,6 +49,7 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
+# The role itself
 resource "aws_iam_role" "this" {
   for_each           = local.roles_map
   name               = "${each.value.name_prefix}-${local.system_name}"
