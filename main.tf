@@ -31,6 +31,7 @@ locals {
       actions     = concat(try(role.assume_role.actions, []), ["sts:AssumeRole"])
       type        = try(role.assume_role.type, "Service")
       principals  = try(role.assume_role.principals, ["ec2.amazonaws.com"])
+      conditions  = try(role.assume_role.conditions, [])
     }
   }
 }
