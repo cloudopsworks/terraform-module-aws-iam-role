@@ -46,6 +46,14 @@ data "aws_iam_policy_document" "assume_role" {
       type        = each.value.type
       identifiers = each.value.principals
     }
+    dynamic "condition" {
+      for_each = try(each.value.conditions, [])
+      content {
+        test     = condition.value.test
+        values   = condition.value.values
+        variable = condition.value.variable
+      }
+    }
   }
 }
 
