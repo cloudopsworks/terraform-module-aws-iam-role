@@ -28,10 +28,14 @@ locals {
   assume_role_principals = {
     for role in var.roles : role.name_prefix => {
       name_prefix = role.name_prefix
-      actions     = concat(try(role.assume_role.actions, []), ["sts:AssumeRole"])
-      type        = try(role.assume_role.type, "Service")
-      principals  = try(role.assume_role.principals, ["ec2.amazonaws.com"])
-      conditions  = try(role.assume_role.conditions, [])
+      statements = try(role.assume_roles, [
+        {
+          actions    = ["sts:AssumeRole"]
+          type       = "Service"
+          principals = ["ec2.amazonaws.com"]
+          conditions = []
+        }
+      ])
     }
   }
 }
@@ -40,19 +44,22 @@ locals {
 data "aws_iam_policy_document" "assume_role" {
   for_each = local.assume_role_principals
   version  = "2012-10-17"
-  statement {
-    effect  = "Allow"
-    actions = each.value.actions
-    principals {
-      type        = each.value.type
-      identifiers = each.value.principals
-    }
-    dynamic "condition" {
-      for_each = try(each.value.conditions, [])
-      content {
-        test     = condition.value.test
-        values   = condition.value.values
-        variable = condition.value.variable
+  dynamic "statement" {
+    for_each = each.value.statements
+    content {
+      effect  = "Allow"
+      actions = statement.value.actions
+      principals {
+        type        = statement.value.type
+        identifiers = statement.value.principals
+      }
+      dynamic "condition" {
+        for_each = try(statement.value.conditions, [])
+        content {
+          test     = condition.value.test
+          values   = condition.value.values
+          variable = condition.value.variable
+        }
       }
     }
   }
