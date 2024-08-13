@@ -6,6 +6,6 @@
 
 variable "roles" {
   description = "A list of IAM roles to create"
-  type        = list(any)
+  type        = any
   default     = []
 }
