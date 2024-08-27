@@ -6,6 +6,10 @@
 
 locals {
   roles_map = { for role in var.roles : role.name_prefix => role }
+  instance_profile_map = {
+    for name, role in local.roles_map : name => role
+    if try(role.instance_profile, false) == true
+  }
   managed_policies = merge(
     [
       for role in var.roles : {
@@ -113,4 +117,10 @@ resource "aws_iam_role_policy" "inline" {
   name     = each.value.name
   role     = aws_iam_role.this[each.value.name_prefix].id
   policy   = data.aws_iam_policy_document.inline[each.key].json
+}
+
+resource "aws_iam_instance_profile" "this" {
+  for_each = local.instance_profile_map
+  name     = "${each.value.name_prefix}-${local.system_name}"
+  role     = aws_iam_role.this[each.key].name
 }
