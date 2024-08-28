@@ -85,7 +85,7 @@ data "aws_iam_policy" "managed" {
 
 resource "aws_iam_role_policy_attachment" "managed" {
   for_each   = local.managed_policies
-  role       = aws_iam_role.this[each.value.role_prefix].name
+  role       = aws_iam_role.this[each.value.name_prefix].name
   policy_arn = data.aws_iam_policy.managed[each.key].arn
 }
 
