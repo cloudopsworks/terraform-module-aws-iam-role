@@ -9,3 +9,9 @@ variable "roles" {
   type        = any
   default     = []
 }
+
+variable "policies" {
+  description = "A list of IAM policies to create"
+  type        = any
+  default     = []
+}

@@ -4,6 +4,30 @@
 #            Distributed Under Apache v2.0 License
 #
 
+# Entry Format:
+#
+# name_prefix: string
+# description: string
+# assume_roles:
+#   - actions: list(string)
+#     type: string
+#     principals: list(string)
+#     conditions:
+#       - test: string
+#         values: list(string)
+#         variable: string
+# managed_policies: list(string)
+# inline_policies:
+#   - name: string
+#     statements:
+#       - sid: string
+#         effect: string
+#         actions: list(string)
+#         resources: list(string)
+#         conditions:
+#           - test: string
+#             values: list(string)
+#             variable: string
 locals {
   roles_map = { for role in var.roles : role.name_prefix => role }
   instance_profile_map = {

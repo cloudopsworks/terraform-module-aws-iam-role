@@ -12,3 +12,12 @@ output "iam_roles" {
     }
   ]
 }
+
+output "iam_policies" {
+  value = [
+    for role in aws_iam_policy.this : {
+      name = role.name
+      arn  = role.arn
+    }
+  ]
+}
