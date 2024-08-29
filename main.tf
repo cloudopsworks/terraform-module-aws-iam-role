@@ -74,7 +74,7 @@ resource "aws_iam_role" "this" {
   for_each           = local.roles_map
   name               = "${each.value.name_prefix}-${local.system_name}"
   assume_role_policy = data.aws_iam_policy_document.assume_role[each.key].json
-  description        = each.value.description != "" ? each.value.description : "IAM Role ${each.value.name_prefix}-${local.system_name}"
+  description        = try(each.value.description, "") != "" ? each.value.description : "IAM Role ${each.value.name_prefix}-${local.system_name}"
   tags               = local.all_tags
 }
 
