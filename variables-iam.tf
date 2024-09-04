@@ -15,3 +15,9 @@ variable "policies" {
   type        = any
   default     = []
 }
+
+variable "service_linked_roles" {
+  description = "A list of service roles to create"
+  type        = any
+  default     = []
+}
