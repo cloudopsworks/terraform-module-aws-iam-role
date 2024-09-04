@@ -21,3 +21,12 @@ output "iam_policies" {
     }
   ]
 }
+
+output "service_linked_roles" {
+  value = [
+    for role in aws_iam_service_linked_role.this : {
+      name = role.name
+      arn  = role.arn
+    }
+  ]
+}
