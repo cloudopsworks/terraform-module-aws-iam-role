@@ -99,20 +99,20 @@ resource "aws_iam_role" "this" {
   name                = "${each.value.name_prefix}-${local.system_name}"
   assume_role_policy  = data.aws_iam_policy_document.assume_role[each.key].json
   description         = try(each.value.description, "") != "" ? each.value.description : "IAM Role ${each.value.name_prefix}-${local.system_name}"
-  managed_policy_arns = toset(try(each.value.managed_policies, {}))
+#   managed_policy_arns = toset(try(each.value.managed_policies, {}))
   tags                = local.all_tags
 }
 
-# data "aws_iam_policy" "managed" {
-#   for_each = local.managed_policies
-#   arn      = each.value.policy_arn
-# }
-#
-# resource "aws_iam_role_policy_attachment" "managed" {
-#   for_each   = local.managed_policies
-#   role       = aws_iam_role.this[each.value.name_prefix].name
-#   policy_arn = data.aws_iam_policy.managed[each.key].arn
-# }
+data "aws_iam_policy" "managed" {
+  for_each = local.managed_policies
+  arn      = each.value.policy_arn
+}
+
+resource "aws_iam_role_policy_attachment" "managed" {
+  for_each   = local.managed_policies
+  role       = aws_iam_role.this[each.value.name_prefix].name
+  policy_arn = data.aws_iam_policy.managed[each.key].arn
+}
 
 # Inline policies
 data "aws_iam_policy_document" "inline" {
